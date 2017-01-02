@@ -1,0 +1,9 @@
+java_library2(
+  name = 'lib',
+  srcs = [
+    # At least two sources to ensure manifest must
+    # be at the start of the built jar
+    'A.java',
+    'B.java',
+  ],
+)

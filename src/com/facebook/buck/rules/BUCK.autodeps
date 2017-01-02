@@ -210,6 +210,7 @@
       "//src/com/facebook/buck/jvm/java:config",
       "//src/com/facebook/buck/jvm/java:rules",
       "//src/com/facebook/buck/jvm/java:support",
+      "//src/com/facebook/buck/jvm/java2:rules",
       "//src/com/facebook/buck/jvm/kotlin:kotlin",
       "//src/com/facebook/buck/jvm/scala:scala",
       "//src/com/facebook/buck/log:api",

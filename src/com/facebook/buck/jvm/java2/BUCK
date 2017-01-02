@@ -1,0 +1,22 @@
+java_library(
+  name = 'rules',
+  srcs = [
+    'JavaCompilerDescription.java',
+    'JavaLibrary2Description.java',
+    'JavaLibraryRule.java',
+  ],
+  autodeps = True,
+  visibility = [
+    '//src/com/facebook/buck/rules:types',
+  ],
+)
+
+java_library(
+  name = 'steps',
+  srcs = [
+    'CompileToJarStep.java',
+    'ExternalJavac.java',
+    'JavaCompilerTool.java',
+  ],
+  autodeps = True,
+)

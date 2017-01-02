@@ -113,6 +113,7 @@ import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.KeystoreDescription;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
+import com.facebook.buck.jvm.java2.JavaLibrary2Description;
 import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription;
 import com.facebook.buck.jvm.kotlin.KotlinTestDescription;
@@ -730,6 +731,7 @@ public class KnownBuildRuleTypes {
         defaultJavacOptions,
         defaultCxxPlatform));
     builder.register(new JavaLibraryDescription(defaultJavacOptions));
+    builder.register(new JavaLibrary2Description());
     builder.register(
         new JavaTestDescription(
             defaultJavaOptionsForTests,
