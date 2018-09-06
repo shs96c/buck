@@ -108,9 +108,7 @@ public class WindowsFS {
         // Hardlinks are only for files - so, copying folders. We can't use `MostFiles` since that
         // would introduce a circular dependency. Instead, we'll do this the old fashioned way
         try (Stream<Path> stream = Files.walk(symlink)) {
-          stream.forEach(path -> {
-
-          });
+          stream.forEach(path -> {});
         }
         copy(target, symlink);
       } else {
@@ -126,19 +124,20 @@ public class WindowsFS {
   private void copy(Path source, Path dest) {
     if (Files.isDirectory(source)) {
       try (Stream<Path> stream = Files.walk(source)) {
-        stream.forEach(path -> {
-          Path actualDest = source.resolve(dest.relativize(path));
+        stream.forEach(
+            path -> {
+              Path actualDest = source.resolve(dest.relativize(path));
 
-          if (Files.isDirectory(path)) {
-            copy(path, actualDest);
-          } else {
-            try {
-              Files.copy(source, actualDest, REPLACE_EXISTING);
-            } catch (IOException e) {
-              throw new UncheckedIOException(e);
-            }
-          }
-        });
+              if (Files.isDirectory(path)) {
+                copy(path, actualDest);
+              } else {
+                try {
+                  Files.copy(source, actualDest, REPLACE_EXISTING);
+                } catch (IOException e) {
+                  throw new UncheckedIOException(e);
+                }
+              }
+            });
       } catch (IOException e) {
         throw new UncheckedIOException(e);
       }
@@ -175,7 +174,8 @@ public class WindowsFS {
           if (nativeResultPrivileged.getResult()) {
             nativeResult = nativeResultPrivileged;
             windowsPrivilegedApiStatus = WindowsPrivilegedApiUsage.UsePrivilegedApi;
-          } else if (nativeResult.getErrorCode() == WindowsFSLibrary.ERROR_PRIVILEGE_NOT_HELD) {
+          } else if (nativeResult.getErrorCode() == WindowsFSLibrary.ERROR_PRIVILEGE_NOT_HELD
+              || nativeResult.getErrorCode() == WindowsFSLibrary.INVALID_PARAMETER_ERROR) {
             // Failed to used non-privileged API! The Developer Mode not enabled.
             failureDueToDevModeNotEnabled = true;
             nativeResult = unPrivilegedHardLinking(symlink, target);
