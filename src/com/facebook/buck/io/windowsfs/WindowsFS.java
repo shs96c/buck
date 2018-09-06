@@ -16,6 +16,8 @@
 
 package com.facebook.buck.io.windowsfs;
 
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -123,7 +125,7 @@ public class WindowsFS {
                 if (Files.isDirectory(path)) {
                   Files.createDirectories(actualDest);
                 } else {
-                  Files.createLink(actualDest, source);
+                  Files.copy(source, actualDest, REPLACE_EXISTING);
                 }
               } catch (IOException e) {
                 throw new UncheckedIOException(e);
