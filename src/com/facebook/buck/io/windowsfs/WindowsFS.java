@@ -174,8 +174,7 @@ public class WindowsFS {
           if (nativeResultPrivileged.getResult()) {
             nativeResult = nativeResultPrivileged;
             windowsPrivilegedApiStatus = WindowsPrivilegedApiUsage.UsePrivilegedApi;
-          } else if (nativeResult.getErrorCode() == WindowsFSLibrary.ERROR_PRIVILEGE_NOT_HELD
-              || nativeResult.getErrorCode() == WindowsFSLibrary.INVALID_PARAMETER_ERROR) {
+          } else {
             // Failed to used non-privileged API! The Developer Mode not enabled.
             failureDueToDevModeNotEnabled = true;
             nativeResult = unPrivilegedHardLinking(symlink, target);
