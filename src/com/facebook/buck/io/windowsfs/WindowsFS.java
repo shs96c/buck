@@ -16,7 +16,10 @@
 
 package com.facebook.buck.io.windowsfs;
 
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.file.MostFiles;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 /** Utility class for working with windows FS */
@@ -35,7 +38,8 @@ public class WindowsFS {
   enum WindowsPrivilegedApiUsage {
     Unknown,
     UseUnprivilegedApi,
-    UsePrivilegedApi
+    UsePrivilegedApi,
+    UseHardLinks,
   }
 
   private WindowsPrivilegedApiUsage windowsPrivilegedApiStatus = WindowsPrivilegedApiUsage.Unknown;
@@ -96,6 +100,21 @@ public class WindowsFS {
     return new NativeCreateSymlinkResult(created, lastError);
   }
 
+  private NativeCreateSymlinkResult unPrivilegedHardLinking(Path symlink, Path target) {
+    try {
+      if (Files.isDirectory(target)) {
+        // Hardlinks are only for files - so, copying folders
+        MostFiles.copyRecursively(target, symlink);
+      } else {
+        Path realFile = MorePaths.normalize(symlink.getParent().resolve(target));
+        Files.createLink(symlink, realFile);
+      }
+      return new NativeCreateSymlinkResult(true, 0);
+    } catch (IOException e) {
+      return new NativeCreateSymlinkResult(false, /* Some magic number */ -100);
+    }
+  }
+
   /**
    * Creates a symbolic link (using CreateSymbolicLink winapi call under the hood).
    *
@@ -129,6 +148,8 @@ public class WindowsFS {
           } else if (nativeResult.getErrorCode() == WindowsFSLibrary.ERROR_PRIVILEGE_NOT_HELD) {
             // Failed to used non-privileged API! The Developer Mode not enabled.
             failureDueToDevModeNotEnabled = true;
+            nativeResult = unPrivilegedHardLinking(symlink, target);
+            windowsPrivilegedApiStatus = WindowsPrivilegedApiUsage.UseHardLinks;
           }
         } else {
           // Success for using the non privileged API - it is there and it is enabled.
@@ -141,6 +162,9 @@ public class WindowsFS {
         break;
       case UsePrivilegedApi:
         nativeResult = privilegedCreateSymbolicLink(symlinkPathString, targetPathString, dirLink);
+        break;
+      case UseHardLinks:
+        nativeResult = unPrivilegedHardLinking(symlink, target);
         break;
       default:
         nativeResult = new NativeCreateSymlinkResult(false, -1);
