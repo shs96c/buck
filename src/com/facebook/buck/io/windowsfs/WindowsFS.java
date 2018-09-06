@@ -16,11 +16,13 @@
 
 package com.facebook.buck.io.windowsfs;
 
-import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.io.file.MostFiles;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.stream.Stream;
 
 /** Utility class for working with windows FS */
 public class WindowsFS {
@@ -103,15 +105,43 @@ public class WindowsFS {
   private NativeCreateSymlinkResult unPrivilegedHardLinking(Path symlink, Path target) {
     try {
       if (Files.isDirectory(target)) {
-        // Hardlinks are only for files - so, copying folders
-        MostFiles.copyRecursively(target, symlink);
+        // Hardlinks are only for files - so, copying folders. We can't use `MostFiles` since that
+        // would introduce a circular dependency. Instead, we'll do this the old fashioned way
+        try (Stream<Path> stream = Files.walk(symlink)) {
+          stream.forEach(path -> {
+
+          });
+        }
+        copy(target, symlink);
       } else {
-        Path realFile = MorePaths.normalize(symlink.getParent().resolve(target));
+        Path realFile = symlink.getParent().resolve(target).normalize();
         Files.createLink(symlink, realFile);
       }
       return new NativeCreateSymlinkResult(true, 0);
     } catch (IOException e) {
       return new NativeCreateSymlinkResult(false, /* Some magic number */ -100);
+    }
+  }
+
+  private void copy(Path source, Path dest) {
+    if (Files.isDirectory(source)) {
+      try (Stream<Path> stream = Files.walk(source)) {
+        stream.forEach(path -> {
+          Path actualDest = source.resolve(dest.relativize(path));
+
+          if (Files.isDirectory(path)) {
+            copy(path, actualDest);
+          } else {
+            try {
+              Files.copy(source, actualDest, REPLACE_EXISTING);
+            } catch (IOException e) {
+              throw new UncheckedIOException(e);
+            }
+          }
+        });
+      } catch (IOException e) {
+        throw new UncheckedIOException(e);
+      }
     }
   }
 
